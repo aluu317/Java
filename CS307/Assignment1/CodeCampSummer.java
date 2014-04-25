@@ -257,6 +257,9 @@ public class CodeCampSummer {
         /*CS307 STUDENTS: ADD YOUR TESTS HERE. At least 5 for method matches,  
          * 5 for method mostVowels, and 5 for findMajority.
          */
+         
+        // Experiment
+        runExperiment();
         
     }
     
@@ -354,22 +357,68 @@ public class CodeCampSummer {
         return index;
     }
     
+    /**
+     * Helper method for findMajority
+     * @params int array and item that we're looking for
+     * @return the first index of the item in the array, -1 if not in the array
+     */
+     private static int findIndexOf(int[] list, int item) {
+     	int res = -1;
+     	for (int i = 0; i < list.length; i++) {
+     		if (list[i] == item) {
+     			res = i;
+     			break;
+     		}
+     	}
+     	return res;
+     }
+     
     
     /**
      * Determine if there is a majority element in an array of ints.
      * The parameter <tt>list</tt> is not altered as a result of this 
      * method.
+     * A majority element in an array A of size N is an element that appears more than N/2 times
+     * You can only use native array, and not any class from Java utils.
      * @param list != null
      * @return  the first index of the value of the majority element if it exists.
      * If a majority element does not exist return -1.
      */
     public static int findMajority(int[] list) {
         assert ( list != null ) : "Violation of precondition: findMajority";
+        
+        int result = -1;
+        int unique_count = 0;
+        int[] unique_elements = new int[list.length];
+        int[] element_counts = new int[list.length];
+        int[] first_indices = new int[list.length];
 
-        /*CS307 STUDENTS: ADD YOUR CODE HERE*/
+		// iterate through the list and keep count of unique elements
+        for (int i = 0; i < list.length; i++) {
+        	int index = findIndexOf(unique_elements, list[i]);
+        	// if we haven't seen this element, add it to the unique_elements, store the index, and mark its count 1
+        	if (index == -1) {
+        		unique_count++;
+        		unique_elements[unique_count-1] = list[i];
+        		element_counts[unique_count-1] = 1;
+        		first_indices[unique_count-1] = i;
+        	}
 
-        /*CS307 STUDENTS: You will need to alter the return statement.*/
-        return -1;
+        	// if we have seen this element, increase its count
+        	else {
+        		element_counts[index]++;
+        	}
+        }
+        
+        // check if there is such majority element
+		for (int i = 0; i < element_counts.length; i++) {
+			if (element_counts[i] > list.length/2) {
+				result = first_indices[i];
+				break;
+			}
+		}
+        
+        return result;
     }
     
     /**
@@ -377,6 +426,8 @@ public class CodeCampSummer {
      * Pick random birthdays for the given number of people. 
      * Return the number of pairs of people that share the
      * same birthday.
+     * You may not use any other Java classes when completing this method except Random and Math. 
+     * You can use native arrays and of course the array length field. (but not methods from the Arrays class.)
      * @param numPeople The number of people in the experiment.
      * This value must be > 0
      * @param numDays The number of days in the year for this experiement.
@@ -388,10 +439,24 @@ public class CodeCampSummer {
                 " must be greater than 0. numPeople: " + numPeople + 
                 ", numDays: " + numDays;
         
-        /*CS307 STUDENTS: ADD YOUR CODE HERE*/
+        int[] birthdays = new int[numPeople];
+        
+        // generate random birthday for each person
+        for (int person = 0; person < numPeople; person++) {
+        	birthdays[person] = (int) (Math.random() * numDays);
+        }
 
-        /*CS307 STUDENTS: You will need to alter the return statement.*/   
-        return -1;
+		// count number of shared birthdays
+		int index = 0;
+		int count = 0;
+		while (index < numPeople) {
+			for (int i = index+1 ; i < numPeople; i++) {
+				if (birthdays[index] == birthdays[i])
+					count++;
+			}
+			index++;
+		}
+        return count;
     }
     
     /* helper method for showing results of tests
@@ -421,5 +486,52 @@ public class CodeCampSummer {
             i++;
         }
         return foundNonNull;
+    }
+    
+    // Exp 1: 
+    // Perform 20,000 experiments with 365 days per year and 182 people . What is the average number of pairs of people with shared birthdays?
+    // Exp 2:
+    // Perform 20,000 experiments with 365 days per year and vary the number of people from 2 to 100. (Total of 20,000 * 99 = 1,980,000 runs) 
+    // For each of the given number of people determine the percentage of experiments were at least one pair of people shared a birthday. 
+    // At what number of people (between 2 and 100) does the percentage first exceed 50%?
+    private static void runExperiment() {
+    	// EXP 1
+    	int pairs = 0;
+    	for (int i = 0; i < 20000; i++) {
+    		pairs += sharedBirthdays(182, 365);
+    	}
+    	System.out.println("Exp 1: Performed 20,000 experiments with 365 days per year and 182 people.\n" + 
+    		"The average number of pairs of people with shared birthdays is " + pairs/20000 + " pairs.");
+    	
+    	System.out.println();
+    	System.out.println();
+    	System.out.println();
+    	
+    	
+    	// EXP 2
+    	System.out.print("Exp 2: Perform 20,000 experiments with 365 days per year and vary the number of people from 2 to 100.\n" +
+    		"At what number of people (between 2 and 100) does the percentage first exceed 50%? ");
+    	int first_numPeople_to_exceed = 0;
+    	for (int numPeople = 2; numPeople <= 100; numPeople++) {
+    		pairs = 0;
+    		int avg_sharedBirthdays = 0;
+    		int count_exps_with_at_least_one_pair = 0;
+			for (int i = 0; i < 20000; i++) {
+				int exp_pairs = sharedBirthdays(numPeople, 365);
+				pairs += exp_pairs;
+				if (exp_pairs >= 1) {
+					count_exps_with_at_least_one_pair++;
+				}
+			}
+			avg_sharedBirthdays = pairs/20000;
+			int percentage = count_exps_with_at_least_one_pair/20000 * 100;
+			if (percentage > 50 && first_numPeople_to_exceed == 0)
+			{
+				first_numPeople_to_exceed = numPeople;
+			}
+    	}
+    	System.out.println(first_numPeople_to_exceed);
+    		
+    	
     }
 }
